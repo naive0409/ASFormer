@@ -69,7 +69,7 @@ class AttLayer(nn.Module):
         '''
         window_mask = torch.zeros((1, self.bl, self.bl + 2* (self.bl //2)))
         for i in range(self.bl):
-            window_mask[:, :, i:i+self.bl] = 1
+            window_mask[:, i, i:i + self.bl] = 1
         return window_mask.to(device)
     
     def forward(self, x1, x2, mask):
