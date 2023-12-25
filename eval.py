@@ -140,9 +140,9 @@ def segment_bars_with_confidence(save_path, confidence, *labels):
     plt.close()
  
  
-def func_eval(dataset, recog_path, file_list):
-    ground_truth_path = "./data/" + dataset + "/groundTruth/"
-    mapping_file = "./data/" + dataset + "/mapping.txt"
+def func_eval(dataset, recog_path, file_list, dataset_dir):
+    ground_truth_path = dataset_dir + "/data/" + dataset + "/groundTruth/"
+    mapping_file = dataset_dir + "/data/" + dataset + "/mapping.txt"
     list_of_videos = read_file(file_list).split('\n')[:-1]
  
     file_ptr = open(mapping_file, 'r')
@@ -213,7 +213,9 @@ def main():
     parser.add_argument('--dataset', default="gtea")
     parser.add_argument('--split', default=1, type=int)
     parser.add_argument('--result_dir', default='results')
-    
+    # 修改dataset路径
+    parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/50salads')
+
     args = parser.parse_args()
 
     acc_all = 0.
@@ -223,8 +225,8 @@ def main():
     if args.split == 0:
         for split in range(1, cnt_split_dict[args.dataset] + 1):
             recog_path = "./{}/".format(args.result_dir)+args.dataset+"/split_{}".format(split)+"/"
-            file_list = "./data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
-            acc, edit, f1s = func_eval(args.dataset, recog_path, file_list)
+            file_list = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
+            acc, edit, f1s = func_eval(args.dataset, recog_path, file_list, args.dataset_dir)
             acc_all += acc
             edit_all += edit
             f1s_all[0] += f1s[0]
@@ -237,8 +239,8 @@ def main():
     else:
         split = args.split
         recog_path = "./{}/".format(args.result_dir)+args.dataset+"/split_{}".format(split)+"/"
-        file_list = "./data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
-        acc_all, edit_all, f1s_all = func_eval(args.dataset, recog_path, file_list)
+        file_list = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
+        acc_all, edit_all, f1s_all = func_eval(args.dataset, recog_path, file_list, args.dataset_dir)
     
     print("Acc: %.4f  Edit: %4f  F1@10,25,50 " % (acc_all, edit_all), f1s_all)
 

@@ -336,6 +336,7 @@ class Trainer:
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
         for epoch in range(num_epochs):
+            print('epoch #{} now begin'.format(epoch))
             epoch_loss = 0
             correct = 0
             total = 0

@@ -43,3 +43,19 @@ If you find our repo useful, please give us a star and cite
 }
 ```
 Feel free to raise a issue if you got trouble with our code.
+
+## shell 命令
+train
+```bash
+python main.py --action=train --dataset=gtea --split=1 --dataset_dir=/mnt/DataDrive164/zhanghao/datasets/50salads
+```
+
+predict
+```bash
+python main.py --action=predict --dataset=gtea --split=1 --dataset_dir=/mnt/DataDrive164/zhanghao/datasets/50salads
+```
+
+eval
+```bash
+python eval.py --dataset=gtea --split=1 --dataset_dir=/mnt/DataDrive164/zhanghao/datasets/50salads
+```

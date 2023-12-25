@@ -23,6 +23,9 @@ parser.add_argument('--dataset', default="50salads")
 parser.add_argument('--split', default='1')
 parser.add_argument('--model_dir', default='models')
 parser.add_argument('--result_dir', default='results')
+# 修改dataset路径
+# /mnt/DataDrive164/zhanghao/datasets/50salads/data/breakfast
+parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/50salads')
 
 args = parser.parse_args()
  
@@ -52,13 +55,13 @@ if args.dataset == 'breakfast':
     lr = 0.0001
 
 
-vid_list_file = "./data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
-vid_list_file_tst = "./data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
-features_path = "./data/"+args.dataset+"/features/"
-gt_path = "./data/"+args.dataset+"/groundTruth/"
- 
-mapping_file = "./data/"+args.dataset+"/mapping.txt"
- 
+vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
+vid_list_file_tst = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
+features_path = args.dataset_dir + "/data/"+args.dataset+"/features/"
+gt_path = args.dataset_dir + "/data/"+args.dataset+"/groundTruth/"
+
+mapping_file = args.dataset_dir + "/data/"+args.dataset+"/mapping.txt"
+
 model_dir = "./{}/".format(args.model_dir)+args.dataset+"/split_"+args.split
 
 results_dir = "./{}/".format(args.result_dir)+args.dataset+"/split_"+args.split
