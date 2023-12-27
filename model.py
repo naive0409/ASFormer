@@ -365,7 +365,7 @@ class Trainer:
             
             scheduler.step(epoch_loss)
             batch_gen.reset()
-            print("[epoch %d]: epoch loss = %f,   acc = %f" % (epoch + 1, epoch_loss / len(batch_gen.list_of_examples),
+            print("[epoch %d]: epoch loss = %f,   acc = %f" % (epoch + 1, epoch_loss / len(batch_gen.names),
                                                                float(correct) / total))
 
             if (epoch + 1) % 10 == 0 and batch_gen_tst is not None:

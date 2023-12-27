@@ -10,6 +10,7 @@ import numpy as np
 import random
 
 import json
+import myargs
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -27,13 +28,15 @@ parser.add_argument('--model_dir', default='models')
 parser.add_argument('--result_dir', default='results')
 # 修改dataset路径
 # /mnt/DataDrive164/zhanghao/datasets/50salads/data/breakfast
-parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/50salads')
+parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/thumos14_lite/actionformer_thumos')
 
 args = parser.parse_args()
+with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
+    myargs.thumos = json.load(file)
  
-num_epochs = 120
+num_epochs = 30
 
-lr = 0.0005
+lr = 0.0001
 num_layers = 10
 num_f_maps = 64
 features_dim = 2048
@@ -57,8 +60,7 @@ if args.dataset == 'breakfast':
     lr = 0.0001
 
 if args.dataset == 'thumos':
-    with open(args.dataset_dir + '/annotations/thumos14.json', 'r') as file:
-        thumos = json.load(file)
+    sample_rate = 2
 
 # train split
 vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
@@ -92,10 +94,24 @@ for k,v in actions_dict.items():
     index2label[v] = k
 num_classes = len(actions_dict)
 '''
-# TODO 生成actions_dict
-actions_dict = {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4,
-                'spread': 9, 'stir': 6, 'take': 0}
+# actions_dict = {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4,
+#                 'spread': 9, 'stir': 6, 'take': 0}
+# {'CricketBowling': [5], 'CricketShot': [6], 'VolleyballSpiking': [19], 'JavelinThrow': [12], 'Shotput': [15], 'TennisSwing': [17], 'GolfSwing': [9], 'ThrowDiscus': [18], 'Billiards': [2], 'CleanAndJerk': [3], 'LongJump': [13], 'Diving': [7], 'CliffDiving': [4], 'BasketballDunk': [1], 'HighJump': [11], 'HammerThrow': [10], 'SoccerPenalty': [16], 'BaseballPitch': [0], 'FrisbeeCatch': [8], 'PoleVault': [14]}
+actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15, 'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3, 'LongJump': 13, 'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11, 'HammerThrow': 10, 'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14}
 num_classes = len(actions_dict)
+
+print('\n')
+print('batch_size={}'.format(bz))
+print('channel_mask_rate={}'.format(channel_mask_rate))
+print('features_dim={}'.format(features_dim))
+print('features_path={}'.format(features_path))
+print('lr={}'.format(lr))
+print('classes={}'.format(num_classes))
+print('epoches={}'.format(num_epochs))
+print('f_maps={}'.format(num_f_maps))
+print('layers={}'.format(num_layers))
+print('result_dir={}'.format(results_dir))
+print('sample_rate={}'.format(sample_rate))
 
 
 trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim, num_classes, channel_mask_rate)
@@ -109,7 +125,7 @@ if args.action == "train":
     actions_dict {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4, 'spread': 9, 'stir': 6, 'take': 0}
     '''
     # batch_gen.read_data(vid_list_file)
-    batch_gen.read_data("test")
+    batch_gen.read_data("train")
     '''
     bath_gen.
     list_of_examples {list:21}     ['S3_Pealate_C1.txt', 'S4_CofHoney_C1.txt', 'S4_Tea_C1.txt', 'S3_Coffee_C1.txt', 'S3_CofHoney_C1.txt', 'S4_Coffee_C1.txt', 'S2_Hotdog_C1.txt', 'S3_Cheese_C1.txt', 'S2_Cheese_C1.txt', 'S2_Pealate_C1.txt', 'S4_Cheese_C1.txt', 'S2_CofHoney_C1.txt', 'S3_Tea_C1.txt', 'S3_Hotdog_C1.txt', 'S2_Coffee_C1.txt', 'S4_Hotdog_C1.txt', 'S4_Peanut_C1.txt', 'S2_Tea_C1.txt', 'S2_Peanut_C1.txt', 'S4_Pealate_C1.txt', 'S3_Peanut_C1.txt']

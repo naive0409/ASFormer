@@ -8,6 +8,7 @@ import random
 from grid_sampler import GridSampler, TimeWarpLayer
 
 import os
+import myargs
 
 class BatchGenerator(object):
     # def __init__(self, num_classes, actions_dict, gt_path, features_path, sample_rate):
@@ -127,26 +128,54 @@ class BatchGenerator(object):
         batch_input = []
         batch_target = []
 
+        '''
+        https://github.com/happyharrycn/actionformer_release/blob/main/FAQ.md
+        batch_size = 4
+        feature_grid = (timestamp * FPS - 0.5 * window_size) / feature_stride
+        499 = 67.11 second * 30 fps / 16 * batchsize
+        '''
+
+
         for idx, vid in enumerate(batch_features):
             features = np.load(batch_features[idx]).T
-            content = []
-            classes = np.zeros(min(np.shape(features)[1], len(content)))
-            # TODO 维度怎么对不上
+            content = myargs.thumos['database'][batch_names[idx]]
+            classes = np.zeros(np.shape(features)[1])
+            # for i in thumos['databse'][]
+            total_frames = content['fps'] * content['duration']
+            classes_by_frame = np.zeros(int(total_frames))
 
-            pass
+            for anno in content['annotations']:
 
-        for idx, vid in enumerate(batch):
-            features = np.load(batch_features[idx])
-            file_ptr = open(batch_gts[idx], 'r')
-            content = file_ptr.read().split('\n')[:-1]
-            classes = np.zeros(min(np.shape(features)[1], len(content)))
-            for i in range(len(classes)):
-                classes[i] = self.actions_dict[content[i]]
+                id_begin = anno['segment(frames)'][0]
+                id_end = anno['segment(frames)'][1]
 
-            feature = features[:, ::self.sample_rate]
-            target = classes[::self.sample_rate]
-            batch_input.append(feature)
-            batch_target.append(target)
+                classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
+
+                id_begin = id_begin / total_frames * features.shape[1]
+                id_end = id_end / total_frames * features.shape[1]
+
+                # id_begin = anno['segment'][0] * content['fps'] / 16 * 4
+                # id_end = anno['segment'][1] * content['fps'] / 16 * 4
+
+                classes[int(id_begin):int(id_end)] = int(anno['label_id'])
+
+        feature = features[:, ::self.sample_rate]
+        target = classes[::self.sample_rate]
+        batch_input.append(feature)
+        batch_target.append(target)
+
+        # for idx, vid in enumerate(batch):
+        #     features = np.load(batch_features[idx])
+        #     file_ptr = open(batch_gts[idx], 'r')
+        #     content = file_ptr.read().split('\n')[:-1]
+        #     classes = np.zeros(min(np.shape(features)[1], len(content)))
+        #     for i in range(len(classes)):
+        #         classes[i] = self.actions_dict[content[i]]
+        #
+        #     feature = features[:, ::self.sample_rate]
+        #     target = classes[::self.sample_rate]
+        #     batch_input.append(feature)
+        #     batch_target.append(target)
 
         length_of_sequences = list(map(len, batch_target))
         batch_input_tensor = torch.zeros(len(batch_input), np.shape(batch_input[0])[0], max(length_of_sequences), dtype=torch.float)  # bs, C_in, L_in
@@ -161,7 +190,7 @@ class BatchGenerator(object):
                 batch_target_tensor[i, :np.shape(batch_target[i])[0]] = torch.from_numpy(batch_target[i])
             mask[i, :, :np.shape(batch_target[i])[0]] = torch.ones(self.num_classes, np.shape(batch_target[i])[0])
 
-        return batch_input_tensor, batch_target_tensor, mask, batch
+        return batch_input_tensor, batch_target_tensor, mask, batch_names
 
 
 if __name__ == '__main__':
