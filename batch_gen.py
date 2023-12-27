@@ -7,14 +7,19 @@ import numpy as np
 import random
 from grid_sampler import GridSampler, TimeWarpLayer
 
+import os
+
 class BatchGenerator(object):
-    def __init__(self, num_classes, actions_dict, gt_path, features_path, sample_rate):
+    # def __init__(self, num_classes, actions_dict, gt_path, features_path, sample_rate):
+    def __init__(self, num_classes, actions_dict, features_path, sample_rate):
         self.index = 0
         self.num_classes = num_classes
         self.actions_dict = actions_dict
-        self.gt_path = gt_path
+        # self.gt_path = gt_path
         self.features_path = features_path
         self.sample_rate = sample_rate
+        self.features = []
+        self.names = []
 
         self.timewarp_layer = TimeWarpLayer()
 
@@ -23,29 +28,57 @@ class BatchGenerator(object):
         self.my_shuffle()
 
     def has_next(self):
-        if self.index < len(self.list_of_examples):
+        if self.index < len(self.names):
             return True
         return False
 
-    def read_data(self, vid_list_file):
+    def read_data_(self, vid_list_file):
         file_ptr = open(vid_list_file, 'r')
         self.list_of_examples = file_ptr.read().split('\n')[:-1]
+        # ['S2_Cheese_C1.txt', 'S2_CofHoney_C1.txt', 'S2_Coffee_C1.txt', 'S2_Hotdog_C1.txt', 'S2_Pealate_C1.txt', 'S2_Peanut_C1.txt', 'S2_Tea_C1.txt', 'S3_Cheese_C1.txt', 'S3_CofHoney_C1.txt', 'S3_Coffee_C1.txt', 'S3_Hotdog_C1.txt', 'S3_Pealate_C1.txt', 'S3_Peanut_C1.txt', 'S3_Tea_C1.txt', 'S4_Cheese_C1.txt', 'S4_CofHoney_C1.txt', 'S4_Coffee_C1.txt', 'S4_Hotdog_C1.txt', 'S4_Pealate_C1.txt', 'S4_Peanut_C1.txt', 'S4_Tea_C1.txt']
         file_ptr.close()
 
         self.gts = [self.gt_path + vid for vid in self.list_of_examples]
         self.features = [self.features_path + vid.split('.')[0] + '.npy' for vid in self.list_of_examples]
         self.my_shuffle()
 
+    def get_all_files_in_directory(self, directory):
+        file_list = []
+
+        # 遍历目录中的所有文件
+        for filename in os.listdir(directory):
+            filepath = os.path.join(directory, filename)
+
+            # 判断是否为文件
+            if os.path.isfile(filepath):
+                name, extension = os.path.splitext(filename)
+                file_list.append(name)
+
+        return file_list
+
+    def read_data(self, action):
+        self.features = self.get_all_files_in_directory(self.features_path)
+        if action == 'train':
+            self.features = [s for s in self.features if 'validation' in s]
+        if action == 'test':
+            self.features = [s for s in self.features if 'test' in s]
+        # self.my_shuffle()
+        self.names = self.features
+        # ['video_validation_0000262', 'video_validation_0000051', 'video_validation_0000163',
+        self.features = [self.features_path + '/' + s + '.npy' for s in self.features]
+        # ['D:\\MLdata\\thumos/i3d_features/video_validation_0000262.npy', 'D:\\MLdata\\thumos/i3d_features/video_validation_0000051.npy',
+        pass
+
+
     def my_shuffle(self):
         # shuffle list_of_examples, gts, features with the same order
         randnum = random.randint(0, 100)
-        random.seed(randnum)
-        random.shuffle(self.list_of_examples)
-        random.seed(randnum)
-        random.shuffle(self.gts)
+        # random.seed(randnum)
+        # random.shuffle(self.list_of_examples)
+        # random.seed(randnum)
+        # random.shuffle(self.gts)
         random.seed(randnum)
         random.shuffle(self.features)
-
 
     def warp_video(self, batch_input_tensor, batch_target_tensor):
         '''
@@ -84,14 +117,24 @@ class BatchGenerator(object):
 
 
     def next_batch(self, batch_size, if_warp=False): # if_warp=True is a strong data augmentation. See grid_sampler.py for details.
-        batch = self.list_of_examples[self.index:self.index + batch_size]
-        batch_gts = self.gts[self.index:self.index + batch_size]
+        # batch = self.list_of_examples[self.index:self.index + batch_size]
+        # batch_gts = self.gts[self.index:self.index + batch_size]
         batch_features = self.features[self.index:self.index + batch_size]
+        batch_names = self.names[self.index:self.index + batch_size]
 
         self.index += batch_size
 
         batch_input = []
         batch_target = []
+
+        for idx, vid in enumerate(batch_features):
+            features = np.load(batch_features[idx]).T
+            content = []
+            classes = np.zeros(min(np.shape(features)[1], len(content)))
+            # TODO 维度怎么对不上
+
+            pass
+
         for idx, vid in enumerate(batch):
             features = np.load(batch_features[idx])
             file_ptr = open(batch_gts[idx], 'r')

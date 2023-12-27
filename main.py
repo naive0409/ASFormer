@@ -9,6 +9,8 @@ import argparse
 import numpy as np
 import random
 
+import json
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 seed = 19980125 # my birthday, :)
@@ -54,13 +56,20 @@ if args.dataset == "gtea":
 if args.dataset == 'breakfast':
     lr = 0.0001
 
+if args.dataset == 'thumos':
+    with open(args.dataset_dir + '/annotations/thumos14.json', 'r') as file:
+        thumos = json.load(file)
 
+# train split
 vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
-vid_list_file_tst = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
-features_path = args.dataset_dir + "/data/"+args.dataset+"/features/"
-gt_path = args.dataset_dir + "/data/"+args.dataset+"/groundTruth/"
+# test split
+# vid_list_file_tst = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
+# features_path = args.dataset_dir + "/data/"+args.dataset+"/features/"
+features_path = args.dataset_dir + '/i3d_features'
+# ground truth
+# gt_path = args.dataset_dir + "/data/"+args.dataset+"/groundTruth/"
 
-mapping_file = args.dataset_dir + "/data/"+args.dataset+"/mapping.txt"
+# mapping_file = args.dataset_dir + "/data/"+args.dataset+"/mapping.txt"
 
 model_dir = "./{}/".format(args.model_dir)+args.dataset+"/split_"+args.split
 
@@ -71,7 +80,7 @@ if not os.path.exists(model_dir):
 if not os.path.exists(results_dir):
     os.makedirs(results_dir)
  
- 
+'''
 file_ptr = open(mapping_file, 'r')
 actions = file_ptr.read().split('\n')[:-1]
 file_ptr.close()
@@ -82,15 +91,34 @@ index2label = dict()
 for k,v in actions_dict.items():
     index2label[v] = k
 num_classes = len(actions_dict)
+'''
+# TODO 生成actions_dict
+actions_dict = {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4,
+                'spread': 9, 'stir': 6, 'take': 0}
+num_classes = len(actions_dict)
 
 
 trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim, num_classes, channel_mask_rate)
+# trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim,  channel_mask_rate)
 if args.action == "train":
-    batch_gen = BatchGenerator(num_classes, actions_dict, gt_path, features_path, sample_rate)
-    batch_gen.read_data(vid_list_file)
+    batch_gen = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    '''
+    batch_gen.
+    features_path    'D:\\MLdata\\ASFormer/data/gtea/features/'
+    gt_path 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/'
+    actions_dict {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4, 'spread': 9, 'stir': 6, 'take': 0}
+    '''
+    # batch_gen.read_data(vid_list_file)
+    batch_gen.read_data("test")
+    '''
+    bath_gen.
+    list_of_examples {list:21}     ['S3_Pealate_C1.txt', 'S4_CofHoney_C1.txt', 'S4_Tea_C1.txt', 'S3_Coffee_C1.txt', 'S3_CofHoney_C1.txt', 'S4_Coffee_C1.txt', 'S2_Hotdog_C1.txt', 'S3_Cheese_C1.txt', 'S2_Cheese_C1.txt', 'S2_Pealate_C1.txt', 'S4_Cheese_C1.txt', 'S2_CofHoney_C1.txt', 'S3_Tea_C1.txt', 'S3_Hotdog_C1.txt', 'S2_Coffee_C1.txt', 'S4_Hotdog_C1.txt', 'S4_Peanut_C1.txt', 'S2_Tea_C1.txt', 'S2_Peanut_C1.txt', 'S4_Pealate_C1.txt', 'S3_Peanut_C1.txt']
+    gts {list:21}               ['D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Peanut_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Peanut_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Peanut_C1.txt']
+    features {list:21}          ['D:\\MLdata\\ASFormer/data/gtea/features/S3_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Peanut_C1.npy']
+    '''
 
-    batch_gen_tst = BatchGenerator(num_classes, actions_dict, gt_path, features_path, sample_rate)
-    batch_gen_tst.read_data(vid_list_file_tst)
+    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    batch_gen_tst.read_data('test')
 
     trainer.train(model_dir, batch_gen, num_epochs, bz, lr, batch_gen_tst)
 
