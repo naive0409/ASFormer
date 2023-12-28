@@ -335,6 +335,7 @@ class Trainer:
         
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+        print('train begin')
         for epoch in range(num_epochs):
             # print('epoch #{} now begin'.format(epoch))
             epoch_loss = 0
@@ -407,7 +408,7 @@ class Trainer:
                 batch_input, batch_target, mask, vids = batch_gen_tst.next_batch(1)
                 vid = vids[0]
 #                 print(vid)
-                features = np.load(features_path + vid.split('.')[0] + '.npy')
+                features = np.load(features_path + vid.split('.')[0] + '.npy').T
                 features = features[:, ::sample_rate]
 
                 input_x = torch.tensor(features, dtype=torch.float)

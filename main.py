@@ -29,6 +29,7 @@ parser.add_argument('--result_dir', default='results')
 # 修改dataset路径
 # /mnt/DataDrive164/zhanghao/datasets/50salads/data/breakfast
 parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/thumos14_lite/actionformer_thumos')
+parser.add_argument('--predict_folder', default='')
 
 args = parser.parse_args()
 with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
@@ -67,7 +68,7 @@ vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+a
 # test split
 # vid_list_file_tst = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
 # features_path = args.dataset_dir + "/data/"+args.dataset+"/features/"
-features_path = args.dataset_dir + '/i3d_features'
+features_path = args.dataset_dir + '/i3d_features' + '/'
 # ground truth
 # gt_path = args.dataset_dir + "/data/"+args.dataset+"/groundTruth/"
 
@@ -97,7 +98,8 @@ num_classes = len(actions_dict)
 # actions_dict = {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4,
 #                 'spread': 9, 'stir': 6, 'take': 0}
 # {'CricketBowling': [5], 'CricketShot': [6], 'VolleyballSpiking': [19], 'JavelinThrow': [12], 'Shotput': [15], 'TennisSwing': [17], 'GolfSwing': [9], 'ThrowDiscus': [18], 'Billiards': [2], 'CleanAndJerk': [3], 'LongJump': [13], 'Diving': [7], 'CliffDiving': [4], 'BasketballDunk': [1], 'HighJump': [11], 'HammerThrow': [10], 'SoccerPenalty': [16], 'BaseballPitch': [0], 'FrisbeeCatch': [8], 'PoleVault': [14]}
-actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15, 'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3, 'LongJump': 13, 'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11, 'HammerThrow': 10, 'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14}
+actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15, 'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3, 'LongJump': 13, 'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11, 'HammerThrow': 10, 'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14,
+                'Background': 20}
 num_classes = len(actions_dict)
 
 print('\n')
@@ -139,7 +141,16 @@ if args.action == "train":
     trainer.train(model_dir, batch_gen, num_epochs, bz, lr, batch_gen_tst)
 
 if args.action == "predict":
-    batch_gen_tst = BatchGenerator(num_classes, actions_dict, gt_path, features_path, sample_rate)
-    batch_gen_tst.read_data(vid_list_file_tst)
+    # model_dir = "./{}/".format(args.model_dir) + args.dataset  # +"/split_"+args.split
+    # results_dir = "./{}/".format(args.result_dir) + args.dataset  # +"/split_"+args.split
+    model_dir = model_dir + '/' + args.predict_folder
+    results_dir = results_dir + '/' + args.predict_folder
+
+    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    batch_gen_tst.read_data('test')
+    if not os.path.exists(results_dir):
+        print('{} does not exists'.format(results_dir))
+        os.mkdir(results_dir)
+        print('mkdir {}'.format(results_dir))
     trainer.predict(model_dir, results_dir, features_path, batch_gen_tst, num_epochs, actions_dict, sample_rate)
 

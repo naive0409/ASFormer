@@ -67,7 +67,7 @@ class BatchGenerator(object):
         self.my_shuffle()
         self.names = self.features
         # ['video_validation_0000262', 'video_validation_0000051', 'video_validation_0000163',
-        self.features = [self.features_path + '/' + s + '.npy' for s in self.features]
+        self.features = [self.features_path + s + '.npy' for s in self.features]
         # ['D:\\MLdata\\thumos/i3d_features/video_validation_0000262.npy', 'D:\\MLdata\\thumos/i3d_features/video_validation_0000051.npy',
         pass
 
@@ -140,17 +140,17 @@ class BatchGenerator(object):
         for idx, vid in enumerate(batch_features):
             features = np.load(batch_features[idx]).T
             content = myargs.thumos['database'][batch_names[idx]]
-            classes = np.zeros(np.shape(features)[1])
+            classes = np.ones(np.shape(features)[1]) * self.actions_dict['Background']
             # for i in thumos['databse'][]
             total_frames = content['fps'] * content['duration']
-            classes_by_frame = np.zeros(int(total_frames))
+            # classes_by_frame = np.ones(int(total_frames)) * self.actions_dict['Background']
 
             for anno in content['annotations']:
 
                 id_begin = anno['segment(frames)'][0]
                 id_end = anno['segment(frames)'][1]
 
-                classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
+                # classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
 
                 id_begin = id_begin / total_frames * features.shape[1]
                 id_end = id_end / total_frames * features.shape[1]
