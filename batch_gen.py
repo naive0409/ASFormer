@@ -58,12 +58,13 @@ class BatchGenerator(object):
         return file_list
 
     def read_data(self, action):
-        self.features = self.get_all_files_in_directory(self.features_path)
+        # self.features = self.get_all_files_in_directory(self.features_path)
+        self.features = list(myargs.thumos['database'].keys())
         if action == 'train':
             self.features = [s for s in self.features if 'validation' in s]
         if action == 'test':
             self.features = [s for s in self.features if 'test' in s]
-        # self.my_shuffle()
+        self.my_shuffle()
         self.names = self.features
         # ['video_validation_0000262', 'video_validation_0000051', 'video_validation_0000163',
         self.features = [self.features_path + '/' + s + '.npy' for s in self.features]

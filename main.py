@@ -36,7 +36,7 @@ with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
  
 num_epochs = 30
 
-lr = 0.0001
+lr = 0.0005
 num_layers = 10
 num_f_maps = 64
 features_dim = 2048
@@ -73,9 +73,9 @@ features_path = args.dataset_dir + '/i3d_features'
 
 # mapping_file = args.dataset_dir + "/data/"+args.dataset+"/mapping.txt"
 
-model_dir = "./{}/".format(args.model_dir)+args.dataset+"/split_"+args.split
+model_dir = "./{}/".format(args.model_dir)+args.dataset  # +"/split_"+args.split
 
-results_dir = "./{}/".format(args.result_dir)+args.dataset+"/split_"+args.split
+results_dir = "./{}/".format(args.result_dir)+args.dataset  # +"/split_"+args.split
  
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
