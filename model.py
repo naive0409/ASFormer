@@ -8,6 +8,7 @@ import numpy as np
 import math
 
 from eval import segment_bars_with_confidence
+from torch.utils.tensorboard import SummaryWriter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -335,6 +336,9 @@ class Trainer:
         
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+
+        writer = SummaryWriter()
+
         print('train begin')
         for epoch in range(num_epochs):
             # print('epoch #{} now begin'.format(epoch))
@@ -346,6 +350,7 @@ class Trainer:
                 batch_input, batch_target, mask, vids = batch_gen.next_batch(batch_size, False)
                 batch_input, batch_target, mask = batch_input.to(device), batch_target.to(device), mask.to(device)
                 optimizer.zero_grad()
+                # writer.add_graph(self.model, batch_input)
                 ps = self.model(batch_input, mask)
 
                 loss = 0
@@ -366,10 +371,14 @@ class Trainer:
             
             scheduler.step(epoch_loss)
             batch_gen.reset()
+            # writer.add_scalar('Loss/train', epoch_loss / len(batch_gen.names), epoch)
+            # writer.add_scalar('Accuracy/train', float(correct) / total, epoch)
+
             print("[epoch %d]: epoch loss = %f,   acc = %f" % (epoch + 1, epoch_loss / len(batch_gen.names),
                                                                float(correct) / total))
 
-            if (epoch + 1) % 10 == 0 and batch_gen_tst is not None:
+            # if (epoch + 1) % 10 == 0 and batch_gen_tst is not None:
+            if (epoch == 0 or (epoch + 1) % 5 == 0) and (batch_gen_tst is not None):
                 self.test(batch_gen_tst, epoch)
                 torch.save(self.model.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".model")
                 torch.save(optimizer.state_dict(), save_dir + "/epoch-" + str(epoch + 1) + ".opt")

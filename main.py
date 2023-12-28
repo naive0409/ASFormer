@@ -37,7 +37,7 @@ with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
  
 num_epochs = 30
 
-lr = 0.0005
+lr = 0.001
 num_layers = 10
 num_f_maps = 64
 features_dim = 2048
@@ -149,7 +149,7 @@ if args.action == "predict":
     batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
     batch_gen_tst.read_data('test')
     if not os.path.exists(results_dir):
-        print('{} does not exists'.format(results_dir))
+        print('{} does not exist'.format(results_dir))
         os.mkdir(results_dir)
         print('mkdir {}'.format(results_dir))
     trainer.predict(model_dir, results_dir, features_path, batch_gen_tst, num_epochs, actions_dict, sample_rate)
