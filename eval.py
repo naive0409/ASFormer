@@ -151,7 +151,12 @@ def func_eval(dataset, recog_path, file_list, dataset_dir):
     actions_dict = dict()
     for a in actions:
         actions_dict[a.split()[1]] = int(a.split()[0])
- 
+    # TODO actions_dict是否有用？
+    # actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15,
+    #                 'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3,
+    #                 'LongJump': 13, 'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11,
+    #                 'HammerThrow': 10, 'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14,
+    #                 'Background': 20}
     overlap = [.1, .25, .5]
     tp, fp, fn = np.zeros(3), np.zeros(3), np.zeros(3)
  
@@ -215,6 +220,7 @@ def main():
     parser.add_argument('--result_dir', default='results')
     # 修改dataset路径
     parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/50salads')
+    parser.add_argument('--predict_folder', default='')
 
     args = parser.parse_args()
 
@@ -240,6 +246,9 @@ def main():
         split = args.split
         recog_path = "./{}/".format(args.result_dir)+args.dataset+"/split_{}".format(split)+"/"
         file_list = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
+        # TODO 修改路径
+        # recog_path = "./{}/".format(args.result_dir)+args.dataset+"/"
+        # file_list = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split{}".format(split)+".bundle"
         acc_all, edit_all, f1s_all = func_eval(args.dataset, recog_path, file_list, args.dataset_dir)
     
     print("Acc: %.4f  Edit: %4f  F1@10,25,50 " % (acc_all, edit_all), f1s_all)
