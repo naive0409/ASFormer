@@ -75,11 +75,9 @@ class BatchGenerator(object):
     def my_shuffle(self):
         # shuffle list_of_examples, gts, features with the same order
         randnum = random.randint(0, 100)
-        # random.seed(randnum)
-        # random.shuffle(self.list_of_examples)
-        # random.seed(randnum)
-        # random.shuffle(self.gts)
         random.seed(randnum)
+        # 前面每次随机的结果都一样。如果想每次训练都不同只用random.seed()就行了
+        # random.seed()
         random.shuffle(self.features)
 
     def warp_video(self, batch_input_tensor, batch_target_tensor):

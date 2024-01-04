@@ -365,6 +365,12 @@ class Trainer:
                 optimizer.step()
 
                 _, predicted = torch.max(ps.data[-1], 1)
+                # 统计一下predicted里面有多少是背景(20)。在第一个epoch的前几个batch里就会从10%左右迅速上升到100%。
+                # 使用gtea复现时上升的较慢，也没有100%那么多
+                count_background = torch.sum(predicted == 20).item()
+                ratio_background = torch.sum(predicted == 20).item() / predicted.shape[1]
+                count_not_background = torch.sum(predicted != 20).item()
+                ratio_not_background = torch.sum(predicted != 20).item() / predicted.shape[1]
                 correct += ((predicted == batch_target).float() * mask[:, 0, :].squeeze(1)).sum().item()
                 total += torch.sum(mask[:, 0, :]).item()
             
