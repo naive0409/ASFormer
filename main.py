@@ -28,12 +28,13 @@ parser.add_argument('--model_dir', default='models')
 parser.add_argument('--result_dir', default='results')
 # 修改dataset路径
 # /mnt/DataDrive164/zhanghao/datasets/50salads/data/breakfast
-parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/zhanghao/datasets/thumos14_lite/actionformer_thumos')
+# /mnt/DataDrive164/caoqiushi/multithumos
+parser.add_argument('--dataset_dir', default='/mnt/DataDrive164/caoqiushi/multithumos')
 parser.add_argument('--predict_folder', default='')
 
 args = parser.parse_args()
-with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
-    myargs.thumos = json.load(file)
+# with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
+#     myargs.thumos = json.load(file)
  
 num_epochs = 30
 
@@ -60,17 +61,18 @@ if args.dataset == "gtea":
 if args.dataset == 'breakfast':
     lr = 0.0001
 
-if args.dataset == 'thumos':
+if args.dataset == 'thumos' or args.dataset == 'multithumos':
     sample_rate = 2
 
+sample_rate = 1
 # train split
-vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
+# vid_list_file = args.dataset_dir + "/data/"+args.dataset+"/splits/train.split"+args.split+".bundle"
 # test split
 # vid_list_file_tst = args.dataset_dir + "/data/"+args.dataset+"/splits/test.split"+args.split+".bundle"
 # features_path = args.dataset_dir + "/data/"+args.dataset+"/features/"
-features_path = args.dataset_dir + '/i3d_features' + '/'
+features_path = args.dataset_dir + '/features' + '/'
 # ground truth
-# gt_path = args.dataset_dir + "/data/"+args.dataset+"/groundTruth/"
+gt_path = args.dataset_dir + "/groundTruth_per_clip/"
 
 # mapping_file = args.dataset_dir + "/data/"+args.dataset+"/mapping.txt"
 
@@ -98,8 +100,16 @@ num_classes = len(actions_dict)
 # actions_dict = {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4,
 #                 'spread': 9, 'stir': 6, 'take': 0}
 # {'CricketBowling': [5], 'CricketShot': [6], 'VolleyballSpiking': [19], 'JavelinThrow': [12], 'Shotput': [15], 'TennisSwing': [17], 'GolfSwing': [9], 'ThrowDiscus': [18], 'Billiards': [2], 'CleanAndJerk': [3], 'LongJump': [13], 'Diving': [7], 'CliffDiving': [4], 'BasketballDunk': [1], 'HighJump': [11], 'HammerThrow': [10], 'SoccerPenalty': [16], 'BaseballPitch': [0], 'FrisbeeCatch': [8], 'PoleVault': [14]}
-actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15, 'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3, 'LongJump': 13, 'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11, 'HammerThrow': 10, 'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14,
+actions_dict = {'CricketBowling': 5, 'CricketShot': 6, 'VolleyballSpiking': 19, 'JavelinThrow': 12, 'Shotput': 15,
+                'TennisSwing': 17, 'GolfSwing': 9, 'ThrowDiscus': 18, 'Billiards': 2, 'CleanAndJerk': 3, 'LongJump': 13,
+                'Diving': 7, 'CliffDiving': 4, 'BasketballDunk': 1, 'HighJump': 11, 'HammerThrow': 10,
+                'SoccerPenalty': 16, 'BaseballPitch': 0, 'FrisbeeCatch': 8, 'PoleVault': 14,
                 'Background': 20}
+
+# for s in actions_dict:
+#     actions_dict[s] = actions_dict[s] + 1
+# actions_dict['Background'] = 0
+
 num_classes = len(actions_dict)
 
 print('\n')
@@ -119,7 +129,7 @@ print('sample_rate={}'.format(sample_rate))
 trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim, num_classes, channel_mask_rate)
 # trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim,  channel_mask_rate)
 if args.action == "train":
-    batch_gen = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    batch_gen = BatchGenerator(num_classes, actions_dict,  features_path, gt_path, sample_rate)
     '''
     batch_gen.
     features_path    'D:\\MLdata\\ASFormer/data/gtea/features/'
@@ -135,7 +145,7 @@ if args.action == "train":
     features {list:21}          ['D:\\MLdata\\ASFormer/data/gtea/features/S3_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Peanut_C1.npy']
     '''
 
-    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, gt_path, sample_rate)
     batch_gen_tst.read_data('test')
 
     trainer.train(model_dir, batch_gen, num_epochs, bz, lr, batch_gen_tst)
@@ -146,7 +156,7 @@ if args.action == "predict":
     model_dir = model_dir + '/' + args.predict_folder
     results_dir = results_dir + '/' + args.predict_folder
 
-    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
+    batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, gt_path, sample_rate)
     batch_gen_tst.read_data('test')
     if not os.path.exists(results_dir):
         print('{} does not exist'.format(results_dir))

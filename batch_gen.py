@@ -12,15 +12,16 @@ import myargs
 
 class BatchGenerator(object):
     # def __init__(self, num_classes, actions_dict, gt_path, features_path, sample_rate):
-    def __init__(self, num_classes, actions_dict, features_path, sample_rate):
+    def __init__(self, num_classes, actions_dict, features_path, gt_path, sample_rate):
         self.index = 0
         self.num_classes = num_classes
         self.actions_dict = actions_dict
-        # self.gt_path = gt_path
+        self.gt_path = gt_path
         self.features_path = features_path
         self.sample_rate = sample_rate
         self.features = []
         self.names = []
+        self.gts = []
 
         self.timewarp_layer = TimeWarpLayer()
 
@@ -58,16 +59,17 @@ class BatchGenerator(object):
         return file_list
 
     def read_data(self, action):
-        # self.features = self.get_all_files_in_directory(self.features_path)
-        self.features = list(myargs.thumos['database'].keys())
+        self.names = self.get_all_files_in_directory(self.features_path)
+        # self.names = list(myargs.thumos['database'].keys())
         if action == 'train':
-            self.features = [s for s in self.features if 'validation' in s]
+            self.names = [s for s in self.names if 'validation' in s]
         if action == 'test':
-            self.features = [s for s in self.features if 'test' in s]
+            self.names = [s for s in self.names if 'test' in s]
         self.my_shuffle()
-        self.names = self.features
+        # self.names = self.names
         # ['video_validation_0000262', 'video_validation_0000051', 'video_validation_0000163',
-        self.features = [self.features_path + s + '.npy' for s in self.features]
+        self.gts = [self.gt_path + s + '.txt' for s in self.names]
+        self.features = [self.features_path + s + '.npy' for s in self.names]
         # ['D:\\MLdata\\thumos/i3d_features/video_validation_0000262.npy', 'D:\\MLdata\\thumos/i3d_features/video_validation_0000051.npy',
         pass
 
@@ -78,7 +80,7 @@ class BatchGenerator(object):
         random.seed(randnum)
         # 前面每次随机的结果都一样。如果想每次训练都不同只用random.seed()就行了
         # random.seed()
-        random.shuffle(self.features)
+        random.shuffle(self.names)
 
     def warp_video(self, batch_input_tensor, batch_target_tensor):
         '''
@@ -118,7 +120,7 @@ class BatchGenerator(object):
 
     def next_batch(self, batch_size, if_warp=False): # if_warp=True is a strong data augmentation. See grid_sampler.py for details.
         # batch = self.list_of_examples[self.index:self.index + batch_size]
-        # batch_gts = self.gts[self.index:self.index + batch_size]
+        batch_gts = self.gts[self.index:self.index + batch_size]
         batch_features = self.features[self.index:self.index + batch_size]
         batch_names = self.names[self.index:self.index + batch_size]
 
@@ -134,34 +136,45 @@ class BatchGenerator(object):
         499 = 67.11 second * 30 fps / 16 * batchsize
         '''
 
+        # for idx, vid in enumerate(batch_features):
+        #     features = np.load(batch_features[idx]).T
+        #     content = myargs.thumos['database'][batch_names[idx]]
+        #     classes = np.ones(np.shape(features)[1]) * self.actions_dict['Background']
+        #     # for i in thumos['databse'][]
+        #     total_frames = content['fps'] * content['duration']
+        #     # classes_by_frame = np.ones(int(total_frames)) * self.actions_dict['Background']
+        #
+        #     for anno in content['annotations']:
+        #
+        #         id_begin = anno['segment(frames)'][0]
+        #         id_end = anno['segment(frames)'][1]
+        #
+        #         # classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
+        #
+        #         id_begin = id_begin / total_frames * features.shape[1]
+        #         id_end = id_end / total_frames * features.shape[1]
+        #
+        #         # id_begin = anno['segment'][0] * content['fps'] / 16 * 4
+        #         # id_end = anno['segment'][1] * content['fps'] / 16 * 4
+        #
+        #         classes[int(id_begin):int(id_end)] = int(anno['label_id'])
+        #
+        # feature = features[:, ::self.sample_rate]
+        # target = classes[::self.sample_rate]
+        # batch_input.append(feature)
+        # batch_target.append(target)
 
         for idx, vid in enumerate(batch_features):
-            features = np.load(batch_features[idx]).T
-            content = myargs.thumos['database'][batch_names[idx]]
-            classes = np.ones(np.shape(features)[1]) * self.actions_dict['Background']
-            # for i in thumos['databse'][]
-            total_frames = content['fps'] * content['duration']
-            # classes_by_frame = np.ones(int(total_frames)) * self.actions_dict['Background']
-
-            for anno in content['annotations']:
-
-                id_begin = anno['segment(frames)'][0]
-                id_end = anno['segment(frames)'][1]
-
-                # classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
-
-                id_begin = id_begin / total_frames * features.shape[1]
-                id_end = id_end / total_frames * features.shape[1]
-
-                # id_begin = anno['segment'][0] * content['fps'] / 16 * 4
-                # id_end = anno['segment'][1] * content['fps'] / 16 * 4
-
-                classes[int(id_begin):int(id_end)] = int(anno['label_id'])
-
-        feature = features[:, ::self.sample_rate]
-        target = classes[::self.sample_rate]
-        batch_input.append(feature)
-        batch_target.append(target)
+            features = np.load(batch_features[idx])#.T
+            file_ptr = open(batch_gts[idx], 'r')
+            content = file_ptr.read().split('\n')[:-1]
+            classes = np.ones(min(np.shape(features)[1], len(content))) * self.actions_dict['Background']
+            for i in range(len(classes)):
+                classes[i] = self.actions_dict[content[i]]
+            feature = features[:, ::self.sample_rate]
+            target = classes[::self.sample_rate]
+            batch_input.append(feature)
+            batch_target.append(target)
 
         # for idx, vid in enumerate(batch):
         #     features = np.load(batch_features[idx])

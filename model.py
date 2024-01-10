@@ -338,6 +338,11 @@ class Trainer:
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
 
         writer = SummaryWriter()
+        writer_index = 0
+
+        # fake_input =torch.abs(torch.randn(1, 2048, 200)).to(device)
+        # fake_mask = torch.ones(1, 21, 200).to(device)
+        # writer.add_graph(model=self.model, input_to_model=[fake_input, fake_mask])
 
         print('train begin')
         for epoch in range(num_epochs):
@@ -347,6 +352,7 @@ class Trainer:
             total = 0
 
             while batch_gen.has_next():
+                writer_index += 1
                 batch_input, batch_target, mask, vids = batch_gen.next_batch(batch_size, False)
                 batch_input, batch_target, mask = batch_input.to(device), batch_target.to(device), mask.to(device)
                 optimizer.zero_grad()
@@ -360,6 +366,9 @@ class Trainer:
                         self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)), min=0,
                         max=16) * mask[:, :, 1:])
 
+                writer.add_scalar('batch loss', loss, writer_index)
+                writer.add_histogram(tag='ps.data', values=ps.data[-1], global_step=writer_index)
+
                 epoch_loss += loss.item()
                 loss.backward()
                 optimizer.step()
@@ -367,18 +376,24 @@ class Trainer:
                 _, predicted = torch.max(ps.data[-1], 1)
                 # 统计一下predicted里面有多少是背景(20)。在第一个epoch的前几个batch里就会从10%左右迅速上升到100%。
                 # 使用gtea复现时上升的较慢，也没有100%那么多
-                count_background = torch.sum(predicted == 20).item()
-                ratio_background = torch.sum(predicted == 20).item() / predicted.shape[1]
-                count_not_background = torch.sum(predicted != 20).item()
-                ratio_not_background = torch.sum(predicted != 20).item() / predicted.shape[1]
+                background_id = 20
+                # background_id = 0
+                count_background = torch.sum(predicted == background_id).item()
+                ratio_background = torch.sum(predicted == background_id).item() / predicted.shape[1]
+                count_not_background = torch.sum(predicted != background_id).item()
+                ratio_not_background = torch.sum(predicted != background_id).item() / predicted.shape[1]
+
+                writer.add_scalar('ratio_background', ratio_background, writer_index)
+                writer.add_histogram(tag='predicted', values=predicted, global_step=writer_index)
+
                 correct += ((predicted == batch_target).float() * mask[:, 0, :].squeeze(1)).sum().item()
                 total += torch.sum(mask[:, 0, :]).item()
             
             
             scheduler.step(epoch_loss)
             batch_gen.reset()
-            # writer.add_scalar('Loss/train', epoch_loss / len(batch_gen.names), epoch)
-            # writer.add_scalar('Accuracy/train', float(correct) / total, epoch)
+            writer.add_scalar('Loss/train', epoch_loss / len(batch_gen.names), epoch)
+            writer.add_scalar('Accuracy/train', float(correct) / total, epoch)
 
             print("[epoch %d]: epoch loss = %f,   acc = %f" % (epoch + 1, epoch_loss / len(batch_gen.names),
                                                                float(correct) / total))
