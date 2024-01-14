@@ -158,10 +158,10 @@ class BatchGenerator(object):
 
                 classes[int(id_begin):int(id_end)] = int(anno['label_id'])
 
-        feature = features[:, ::self.sample_rate]
-        target = classes[::self.sample_rate]
-        batch_input.append(feature)
-        batch_target.append(target)
+            feature = features[:, ::self.sample_rate]
+            target = classes[::self.sample_rate]
+            batch_input.append(feature)
+            batch_target.append(target)
 
         # for idx, vid in enumerate(batch):
         #     features = np.load(batch_features[idx])
