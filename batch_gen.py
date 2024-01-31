@@ -138,25 +138,48 @@ class BatchGenerator(object):
         for idx, vid in enumerate(batch_features):
             features = np.load(batch_features[idx]).T
             content = myargs.thumos['database'][batch_names[idx]]
-            classes = np.ones(np.shape(features)[1]) * self.actions_dict['Background']
+            features_len = features.shape[1]
+            classes = np.ones(features_len, dtype=int) * self.actions_dict['Background']
             # for i in thumos['databse'][]
             total_frames = content['fps'] * content['duration']
-            # classes_by_frame = np.ones(int(total_frames)) * self.actions_dict['Background']
+            classes_by_frame = np.ones(int(total_frames), dtype=int) * self.actions_dict['Background']
 
             for anno in content['annotations']:
 
                 id_begin = anno['segment(frames)'][0]
                 id_end = anno['segment(frames)'][1]
 
-                # classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
+                classes_by_frame[int(id_begin):int(id_end)] = int(anno['label_id'])
 
-                id_begin = id_begin / total_frames * features.shape[1]
-                id_end = id_end / total_frames * features.shape[1]
+                # id_begin = id_begin * features_len / total_frames
+                # id_end = id_end * features_len / total_frames
 
                 # id_begin = anno['segment'][0] * content['fps'] / 16 * 4
                 # id_end = anno['segment'][1] * content['fps'] / 16 * 4
 
-                classes[int(id_begin):int(id_end)] = int(anno['label_id'])
+                # classes[int(id_begin):int(id_end)] = int(anno['label_id'])
+
+            # 非均匀采样
+            anno_frames = sum(np.bincount(classes_by_frame)[:-1])  # 有多少帧不是背景
+
+            offset = 1
+            while anno_frames <= total_frames * 0.5:
+                for anno in content['annotations']:
+                    id_begin = anno['segment(frames)'][0] - offset
+                    id_end = anno['segment(frames)'][1] + offset
+
+                    if 0 <= id_begin < classes_by_frame.shape[0] and classes_by_frame[int(id_begin)] == self.actions_dict['Background']:
+                        classes_by_frame[int(id_begin)] = int(anno['label_id'])
+                        anno_frames += 1
+                    if 0 <= id_end < classes_by_frame.shape[0] and classes_by_frame[int(id_end)] == self.actions_dict['Background']:
+                        classes_by_frame[int(id_end)] = int(anno['label_id'])
+                        anno_frames += 1
+                offset += 1
+                pass
+
+            for index in range(classes_by_frame.shape[0]):
+                classes[int(index * features_len / total_frames)] = int(classes_by_frame[index])
+            # 非均匀采样
 
             feature = features[:, ::self.sample_rate]
             target = classes[::self.sample_rate]
