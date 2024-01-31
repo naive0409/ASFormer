@@ -306,8 +306,13 @@ class MyTransformer(nn.Module):
         super(MyTransformer, self).__init__()
         self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='sliding_att', alpha=1)
         self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='sliding_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
-        
-        
+        #
+        # self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='normal_att', alpha=1)
+        # self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='normal_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
+        #
+        # self.encoder = Encoder(num_layers, r1, r2, num_f_maps, input_dim, num_classes, channel_masking_rate, att_type='block_att', alpha=1)
+        # self.decoders = nn.ModuleList([copy.deepcopy(Decoder(num_layers, r1, r2, num_f_maps, num_classes, num_classes, att_type='block_att', alpha=exponential_descrease(s))) for s in range(num_decoders)]) # num_decoders
+
     def forward(self, x, mask):
         out, feature = self.encoder(x, mask)
         outputs = out.unsqueeze(0)
@@ -336,6 +341,8 @@ class Trainer:
         
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+        # scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
+        # scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.5)
 
         writer = SummaryWriter()
         writer_index = 0
@@ -379,18 +386,21 @@ class Trainer:
                 background_id = 20
                 # background_id = 0
                 count_background = torch.sum(predicted == background_id).item()
-                ratio_background = torch.sum(predicted == background_id).item() / predicted.shape[1]
+                ratio_background = torch.sum(predicted == background_id).item() / predicted.numel()
                 count_not_background = torch.sum(predicted != background_id).item()
-                ratio_not_background = torch.sum(predicted != background_id).item() / predicted.shape[1]
+                ratio_not_background = torch.sum(predicted != background_id).item() / predicted.numel()
 
                 writer.add_scalar('ratio_background', ratio_background, writer_index)
                 writer.add_histogram(tag='predicted', values=predicted, global_step=writer_index)
+
+                # assert writer_index <= 15
 
                 correct += ((predicted == batch_target).float() * mask[:, 0, :].squeeze(1)).sum().item()
                 total += torch.sum(mask[:, 0, :]).item()
             
             
             scheduler.step(epoch_loss)
+            # scheduler.step()
             batch_gen.reset()
             writer.add_scalar('Loss/train', epoch_loss / len(batch_gen.names), epoch)
             writer.add_scalar('Accuracy/train', float(correct) / total, epoch)
