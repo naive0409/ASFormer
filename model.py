@@ -8,6 +8,7 @@ import numpy as np
 import math
 
 from eval import segment_bars_with_confidence
+from torch.utils.tensorboard import SummaryWriter
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -335,6 +336,10 @@ class Trainer:
         
         
         scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3, verbose=True)
+
+        writer = SummaryWriter()
+        writer_index = 0
+
         for epoch in range(num_epochs):
             print('epoch #{} now begin'.format(epoch))
             epoch_loss = 0
@@ -342,6 +347,7 @@ class Trainer:
             total = 0
 
             while batch_gen.has_next():
+                writer_index += 1
                 batch_input, batch_target, mask, vids = batch_gen.next_batch(batch_size, False)
                 batch_input, batch_target, mask = batch_input.to(device), batch_target.to(device), mask.to(device)
                 optimizer.zero_grad()
@@ -354,6 +360,9 @@ class Trainer:
                         self.mse(F.log_softmax(p[:, :, 1:], dim=1), F.log_softmax(p.detach()[:, :, :-1], dim=1)), min=0,
                         max=16) * mask[:, :, 1:])
 
+                writer.add_scalar('batch loss', loss, writer_index)
+                writer.add_histogram(tag='ps.data', values=ps.data[-1], global_step=writer_index)
+
                 epoch_loss += loss.item()
                 loss.backward()
                 optimizer.step()
@@ -364,6 +373,8 @@ class Trainer:
                 ratio_background = torch.sum(predicted == 10).item() / predicted.shape[1]
                 count_not_background = torch.sum(predicted != 10).item()
                 ratio_not_background = torch.sum(predicted != 10).item() / predicted.shape[1]
+                writer.add_scalar('ratio_background', ratio_background,writer_index)
+                writer.add_histogram(tag='predicted', values=predicted, global_step=writer_index)
                 correct += ((predicted == batch_target).float() * mask[:, 0, :].squeeze(1)).sum().item()
                 total += torch.sum(mask[:, 0, :]).item()
             
