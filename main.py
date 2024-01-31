@@ -37,7 +37,7 @@ with open(args.dataset_dir + r"/annotations/thumos14.json", 'r') as file:
  
 num_epochs = 30
 
-lr = 0.001
+lr = 0.0005
 num_layers = 10
 num_f_maps = 64
 features_dim = 2048
@@ -128,20 +128,8 @@ trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim, num_classes, chann
 # trainer = Trainer(num_layers, 2, 2, num_f_maps, features_dim,  channel_mask_rate)
 if args.action == "train":
     batch_gen = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
-    '''
-    batch_gen.
-    features_path    'D:\\MLdata\\ASFormer/data/gtea/features/'
-    gt_path 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/'
-    actions_dict {'background': 10, 'close': 3, 'fold': 8, 'open': 1, 'pour': 2, 'put': 7, 'scoop': 5, 'shake': 4, 'spread': 9, 'stir': 6, 'take': 0}
-    '''
     # batch_gen.read_data(vid_list_file)
     batch_gen.read_data("train")
-    '''
-    bath_gen.
-    list_of_examples {list:21}     ['S3_Pealate_C1.txt', 'S4_CofHoney_C1.txt', 'S4_Tea_C1.txt', 'S3_Coffee_C1.txt', 'S3_CofHoney_C1.txt', 'S4_Coffee_C1.txt', 'S2_Hotdog_C1.txt', 'S3_Cheese_C1.txt', 'S2_Cheese_C1.txt', 'S2_Pealate_C1.txt', 'S4_Cheese_C1.txt', 'S2_CofHoney_C1.txt', 'S3_Tea_C1.txt', 'S3_Hotdog_C1.txt', 'S2_Coffee_C1.txt', 'S4_Hotdog_C1.txt', 'S4_Peanut_C1.txt', 'S2_Tea_C1.txt', 'S2_Peanut_C1.txt', 'S4_Pealate_C1.txt', 'S3_Peanut_C1.txt']
-    gts {list:21}               ['D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Cheese_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_CofHoney_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Coffee_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Hotdog_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Peanut_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Tea_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S2_Peanut_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S4_Pealate_C1.txt', 'D:\\MLdata\\ASFormer/data/gtea/groundTruth/S3_Peanut_C1.txt']
-    features {list:21}          ['D:\\MLdata\\ASFormer/data/gtea/features/S3_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Cheese_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_CofHoney_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Coffee_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Hotdog_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Tea_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S2_Peanut_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S4_Pealate_C1.npy', 'D:\\MLdata\\ASFormer/data/gtea/features/S3_Peanut_C1.npy']
-    '''
 
     batch_gen_tst = BatchGenerator(num_classes, actions_dict,  features_path, sample_rate)
     batch_gen_tst.read_data('test')
