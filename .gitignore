@@ -6,3 +6,4 @@ models/
 runs/
 
 /.idea/misc.xml
+.idea/csv-editor.xml
